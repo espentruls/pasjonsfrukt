@@ -105,7 +105,7 @@ docker run -d \
   -v /mnt/user/appdata/pasjonsfrukt/yield:/app/yield \
   -v /mnt/user/appdata/pasjonsfrukt/config.yaml:/app/config.yaml:ro \
   -v /mnt/user/appdata/pasjonsfrukt/crontab:/etc/cron.d/pasjonsfrukt-crontab:ro \
-  ghcr.io/mathiazom/pasjonsfrukt:latest
+  ghcr.io/espentruls/pasjonsfrukt:latest
 ```
 
 **Note on Authentication:**

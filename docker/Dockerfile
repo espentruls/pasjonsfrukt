@@ -1,6 +1,11 @@
-FROM python:3.11.10-bullseye
+FROM python:3.11-slim-bookworm
 
-RUN apt update && apt -y install cron && apt -y install ffmpeg
+RUN apt-get update && apt-get -y install --no-install-recommends \
+    cron \
+    ffmpeg \
+    gosu \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set local timezone (for cron)
 RUN ln -sf /usr/share/zoneinfo/Europe/Amsterdam /etc/localtime
@@ -21,6 +26,9 @@ COPY pasjonsfrukt pasjonsfrukt
 RUN /root/.local/bin/poetry install --only main
 
 COPY docker/entrypoint.sh .
+COPY docker/crontab.default .
 RUN chmod +x ./entrypoint.sh
+RUN mkdir /config
+
 ENTRYPOINT ["./entrypoint.sh"]
 CMD ["--host", "0.0.0.0", "--port", "8000"]

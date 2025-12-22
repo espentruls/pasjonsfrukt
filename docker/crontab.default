@@ -1,0 +1,4 @@
+# Default crontab for pasjonsfrukt
+# Run harvest every hour
+0 * * * * cd /app && pasjonsfrukt harvest --config-file /config/config.yaml >> /config/pasjonsfrukt.log 2>&1
+# Empty line to please the cron gods

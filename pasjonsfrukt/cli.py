@@ -18,9 +18,7 @@ cli = AsyncTyper()
 async def harvest(
     podcast_slugs: Annotated[
         Optional[list[str]],
-        typer.Argument(
-            metavar="[PODCAST_SLUG]...",
-        ),
+        typer.Argument(),
     ] = None,
     config_stream: Annotated[
         Optional[typer.FileText],
@@ -46,9 +44,7 @@ async def harvest(
 async def sync_feeds(
     podcast_slugs: Annotated[
         Optional[list[str]],
-        typer.Argument(
-            metavar="[PODCAST_SLUG]...",
-        ),
+        typer.Argument(),
     ] = None,
     config_stream: Annotated[
         Optional[typer.FileText],

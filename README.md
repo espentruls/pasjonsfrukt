@@ -112,10 +112,3 @@ docker run -d \
 If standard login fails (HTTP 400), you can manually extract your session tokens from the PodMe website (via browser Developer Tools > Application > Cookies/Storage) and provide them via `PODME_ACCESS_TOKEN` and `PODME_REFRESH_TOKEN` environment variables.
 
 ### Development
-
-#### Formatting
-
-```commandline
-poe fmt
-```
-> uses [Black](https://black.readthedocs.io/en/stable/) code formatter

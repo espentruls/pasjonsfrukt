@@ -3,8 +3,8 @@
 # Default to root if PUID/PGID not set
 PUID=${PUID:-0}
 PGID=${PGID:-0}
-# Default server to false per user preference (just downloader)
-ENABLE_SERVER=${ENABLE_SERVER:-false}
+# Default server to true (RSS hosting enabled)
+ENABLE_SERVER=${ENABLE_SERVER:-true}
 
 # Create user/group if not root
 if [ "$PUID" -ne 0 ]; then

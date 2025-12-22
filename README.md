@@ -87,7 +87,8 @@ You can run `pasjonsfrukt` using Docker, which is recommended for continuous har
 -   `PGID`: Group ID to run as (e.g., `100` for Unraid users).
 
 **Configuration:**
--   `ENABLE_SERVER`: Set to `true` to enable the built-in RSS feed server. Defaults to `false` (only downloads episodes).
+-   `ENABLE_SERVER`: Set to `true` to enable the built-in RSS feed server. Defaults to `true`.
+-   `PODME_HOST`: Base URL for the RSS feed (e.g., `https://rss.mydomain.com` or `http://192.168.1.100:8000`). If not set, defaults to `http://localhost`.
 -   `PODME_EMAIL`: PodMe email address.
 -   `PODME_PASSWORD`: PodMe password.
 -   `PODME_ACCESS_TOKEN`: Override access token (for bypassing login issues).
@@ -105,15 +106,17 @@ Run the container mapping your config and download directory. You can configure 
 ```sh
 docker run -d \
   --name pasjonsfrukt \
+  -p 8000:8000 \
   -e PUID=99 \
   -e PGID=100 \
-  -e ENABLE_SERVER=false \
+  -e ENABLE_SERVER=true \
+  -e PODME_HOST="http://192.168.1.100:8000" \
   -e PODME_EMAIL="your@email.com" \
   -e PODME_PASSWORD="yourpassword" \
   -e PODME_PODCASTS="storefri-med-mikkel-og-herman,papaya" \
   -v /mnt/user/appdata/pasjonsfrukt/yield:/app/yield \
   -v /mnt/user/appdata/pasjonsfrukt:/config \
-  ghcr.io/espentruls/pasjonsfrukt:latest
+  ghcr.io/espentruls/pasjonsfrukt:main
 ```
 
 **Configuration via File (Optional):**
@@ -121,12 +124,3 @@ If you prefer, you can list podcasts in a text file named `podcasts.txt` in your
 
 **Note on Authentication:**
 If standard login fails (HTTP 400), you can manually extract your session tokens from the PodMe website (via browser Developer Tools > Application > Cookies/Storage) and provide them via `PODME_ACCESS_TOKEN` and `PODME_REFRESH_TOKEN` environment variables.
-
-### Development
-
-#### Formatting
-
-```commandline
-poe fmt
-```
-> uses [Black](https://black.readthedocs.io/en/stable/) code formatter

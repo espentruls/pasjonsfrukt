@@ -62,6 +62,8 @@ def config_from_stream(stream: Optional[TextIOWrapper]) -> Config:
         config.auth.refresh_token = os.environ.get("PODME_REFRESH_TOKEN")
     if os.environ.get("PODME_YIELD_DIR"):
         config.yield_dir = os.environ.get("PODME_YIELD_DIR")
+    if os.environ.get("PODME_HOST"):
+        config.host = os.environ.get("PODME_HOST")
 
     # Podcasts from Env Var (comma separated slugs)
     if os.environ.get("PODME_PODCASTS"):

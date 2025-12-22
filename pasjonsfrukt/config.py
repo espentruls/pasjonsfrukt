@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from io import TextIOWrapper
 from typing import Optional
+from pathlib import Path
 import os
 
 from dataclass_wizard import YAMLWizard
@@ -34,12 +35,21 @@ class Config(YAMLWizard):
         # All Podcast properties are currently optional, but default values need to be initialized
         # This allows the YAML config to specify a podcast without an otherwise required empty object ("{}")
         self.podcasts = {
-            k: (v if v is not None else Podcast()) for k, v in self.podcasts.items()
+            k: (v if v is not None else Podcast(feed_name=k)) for k, v in self.podcasts.items()
         }
 
 
-def config_from_stream(stream: TextIOWrapper) -> Optional[Config]:
-    config = Config.from_yaml(stream)
+def config_from_stream(stream: Optional[TextIOWrapper]) -> Config:
+    if stream:
+        config = Config.from_yaml(stream)
+    else:
+        # Defaults if no file
+        config = Config(
+            host="http://localhost",
+            auth=Auth(),
+            podcasts={},
+            yield_dir="yield"
+        )
 
     # Override from Env Vars
     if os.environ.get("PODME_EMAIL"):
@@ -52,5 +62,22 @@ def config_from_stream(stream: TextIOWrapper) -> Optional[Config]:
         config.auth.refresh_token = os.environ.get("PODME_REFRESH_TOKEN")
     if os.environ.get("PODME_YIELD_DIR"):
         config.yield_dir = os.environ.get("PODME_YIELD_DIR")
+
+    # Podcasts from Env Var (comma separated slugs)
+    if os.environ.get("PODME_PODCASTS"):
+        slugs = os.environ.get("PODME_PODCASTS").split(",")
+        for slug in slugs:
+            slug = slug.strip()
+            if slug and slug not in config.podcasts:
+                config.podcasts[slug] = Podcast(feed_name=slug)
+
+    # Podcasts from File (PODME_PODCASTS_FILE)
+    podcasts_file_path = os.environ.get("PODME_PODCASTS_FILE")
+    if podcasts_file_path and os.path.isfile(podcasts_file_path):
+        with open(podcasts_file_path, "r") as f:
+            for line in f:
+                slug = line.strip()
+                if slug and not slug.startswith("#") and slug not in config.podcasts:
+                    config.podcasts[slug] = Podcast(feed_name=slug)
 
     return config

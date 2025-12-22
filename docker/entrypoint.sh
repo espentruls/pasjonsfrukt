@@ -37,32 +37,18 @@ else
     echo "Running as root"
 fi
 
-# Config file setup
+# Determine config file arguments
+CONFIG_ARGS=""
 CONFIG_FILE="/config/config.yaml"
-if [ ! -f "$CONFIG_FILE" ]; then
-    echo "Config file not found at $CONFIG_FILE. Checking /app/config.yaml..."
-    if [ -f "/app/config.yaml" ]; then
-        CONFIG_FILE="/app/config.yaml"
-    else
-        echo "No config file found. Using defaults/env vars."
-        # Create a dummy config if /config is writable, so harvest command doesn't fail
-        # Actually pasjonsfrukt requires config file?
-        # cli.py defaults to "config.yaml".
-        # If we rely on Env Vars, we might still need a dummy yaml to satisfy the loader if it checks file existence.
-        # But config.py logic: config_from_stream reads stream.
-        # If file missing, typer might complain?
-        # Let's assume user provides Env Vars which override empty config.
-        # But we need a file to point to.
-        if [ -w "/config" ]; then
-             echo "Creating dummy config at /config/config.yaml"
-             touch /config/config.yaml
-             CONFIG_FILE="/config/config.yaml"
-             # If PUID set, ensure ownership
-             if [ "$PUID" -ne 0 ]; then
-                 chown "$PUID":"$PGID" /config/config.yaml
-             fi
-        fi
-    fi
+
+if [ -f "$CONFIG_FILE" ]; then
+    echo "Found config file at $CONFIG_FILE"
+    CONFIG_ARGS="--config-file $CONFIG_FILE"
+elif [ -f "/app/config.yaml" ]; then
+    echo "Found config file at /app/config.yaml"
+    CONFIG_ARGS="--config-file /app/config.yaml"
+else
+    echo "No config file found. Using Environment Variables."
 fi
 
 # Crontab setup
@@ -74,10 +60,17 @@ else
     CRON_FILE="/app/crontab.default"
 fi
 
-# Modify default crontab to point to correct config file if using default
+# Update default crontab with correct config args if needed
 if [ "$CRON_FILE" = "/app/crontab.default" ]; then
-    # We edit it in place (it's a copy in container)
-    sed -i "s|/config/config.yaml|$CONFIG_FILE|g" "$CRON_FILE"
+    # We replace the command in the default crontab
+    # Default is: ... pasjonsfrukt harvest --config-file /config/config.yaml ...
+    # We need to replace it with actual args or remove it if empty.
+
+    if [ -z "$CONFIG_ARGS" ]; then
+        sed -i "s| --config-file /config/config.yaml||g" "$CRON_FILE"
+    else
+        sed -i "s| --config-file /config/config.yaml| $CONFIG_ARGS|g" "$CRON_FILE"
+    fi
 fi
 
 echo "Installing crontab from $CRON_FILE..."
@@ -99,7 +92,6 @@ cron
 # Log tailing
 LOG_FILE="/var/log/pasjonsfrukt.log"
 # If we are using /config/pasjonsfrukt.log (from default crontab), we should tail that too?
-# But tail -f can only handle files that exist.
 if [ -f "/config/pasjonsfrukt.log" ]; then
     LOG_FILE="/config/pasjonsfrukt.log"
 fi
@@ -116,9 +108,9 @@ if [ "$ENABLE_SERVER" = "true" ]; then
     tail -f "$LOG_FILE" &
 
     if [ "$PUID" -ne 0 ]; then
-        exec gosu "$PUID":"$PGID" pasjonsfrukt serve --config-file "$CONFIG_FILE" "$@"
+        exec gosu "$PUID":"$PGID" pasjonsfrukt serve $CONFIG_ARGS "$@"
     else
-        exec pasjonsfrukt serve --config-file "$CONFIG_FILE" "$@"
+        exec pasjonsfrukt serve $CONFIG_ARGS "$@"
     fi
 else
     echo "Server disabled. Keeping container alive and logging..."

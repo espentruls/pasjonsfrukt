@@ -82,17 +82,25 @@ You can run `pasjonsfrukt` using Docker, which is recommended for continuous har
 
 #### Environment Variables
 
+**Permissions:**
 -   `PUID`: User ID to run as (e.g., `99` for Unraid nobody).
 -   `PGID`: Group ID to run as (e.g., `100` for Unraid users).
+
+**Configuration:**
 -   `ENABLE_SERVER`: Set to `true` to enable the built-in RSS feed server. Defaults to `false` (only downloads episodes).
--   `PODME_EMAIL`: Override email from config.yaml.
--   `PODME_PASSWORD`: Override password from config.yaml.
+-   `PODME_EMAIL`: PodMe email address.
+-   `PODME_PASSWORD`: PodMe password.
 -   `PODME_ACCESS_TOKEN`: Override access token (for bypassing login issues).
 -   `PODME_REFRESH_TOKEN`: Override refresh token.
+-   `PODME_PODCASTS`: Comma-separated list of podcast slugs to harvest (e.g., `papaya,storefri`).
+-   `PODME_PODCASTS_FILE`: Path to a text file containing podcast slugs (one per line). Default: `/config/podcasts.txt` if mapped.
+
+**Internal:**
+-   `PODME_YIELD_DIR`: Default `/app/yield` (do not change).
 
 #### Unraid / Docker Run
 
-Run the container mapping your config and download directory. Using a `/config` volume allows you to store `config.yaml` and access logs easily.
+Run the container mapping your config and download directory. You can configure everything via Environment Variables, so `config.yaml` is optional.
 
 ```sh
 docker run -d \
@@ -102,15 +110,14 @@ docker run -d \
   -e ENABLE_SERVER=false \
   -e PODME_EMAIL="your@email.com" \
   -e PODME_PASSWORD="yourpassword" \
+  -e PODME_PODCASTS="storefri-med-mikkel-og-herman,papaya" \
   -v /mnt/user/appdata/pasjonsfrukt/yield:/app/yield \
   -v /mnt/user/appdata/pasjonsfrukt:/config \
   ghcr.io/espentruls/pasjonsfrukt:latest
 ```
 
-**Configuration:**
--   Place your `config.yaml` in `/mnt/user/appdata/pasjonsfrukt/`.
--   Logs will be available at `/mnt/user/appdata/pasjonsfrukt/pasjonsfrukt.log`.
--   By default, it runs harvest every hour. If you want a custom schedule, place a file named `pasjonsfrukt-crontab` in `/mnt/user/appdata/pasjonsfrukt/` (mapped to `/etc/cron.d/pasjonsfrukt-crontab`).
+**Configuration via File (Optional):**
+If you prefer, you can list podcasts in a text file named `podcasts.txt` in your `/config` folder (and omit `PODME_PODCASTS` env var), or rely on `config.yaml` if you migrate existing setup.
 
 **Note on Authentication:**
 If standard login fails (HTTP 400), you can manually extract your session tokens from the PodMe website (via browser Developer Tools > Application > Cookies/Storage) and provide them via `PODME_ACCESS_TOKEN` and `PODME_REFRESH_TOKEN` environment variables.

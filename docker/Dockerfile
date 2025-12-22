@@ -1,6 +1,6 @@
 FROM python:3.11.10-bullseye
 
-RUN apt update && apt -y install cron && apt -y install ffmpeg
+RUN apt update && apt -y install cron ffmpeg gosu
 
 # Set local timezone (for cron)
 RUN ln -sf /usr/share/zoneinfo/Europe/Amsterdam /etc/localtime

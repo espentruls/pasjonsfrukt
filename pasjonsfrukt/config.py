@@ -1,14 +1,17 @@
 from dataclasses import dataclass
 from io import TextIOWrapper
 from typing import Optional
+import os
 
 from dataclass_wizard import YAMLWizard
 
 
 @dataclass
 class Auth:
-    email: str
-    password: str
+    email: Optional[str] = None
+    password: Optional[str] = None
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
 
 
 @dataclass
@@ -36,4 +39,16 @@ class Config(YAMLWizard):
 
 
 def config_from_stream(stream: TextIOWrapper) -> Optional[Config]:
-    return Config.from_yaml(stream)
+    config = Config.from_yaml(stream)
+
+    # Override from Env Vars
+    if os.environ.get("PODME_EMAIL"):
+        config.auth.email = os.environ.get("PODME_EMAIL")
+    if os.environ.get("PODME_PASSWORD"):
+        config.auth.password = os.environ.get("PODME_PASSWORD")
+    if os.environ.get("PODME_ACCESS_TOKEN"):
+        config.auth.access_token = os.environ.get("PODME_ACCESS_TOKEN")
+    if os.environ.get("PODME_REFRESH_TOKEN"):
+        config.auth.refresh_token = os.environ.get("PODME_REFRESH_TOKEN")
+
+    return config

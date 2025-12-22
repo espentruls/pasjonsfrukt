@@ -76,6 +76,57 @@ If a `secret` has been defined in the config, a query parameter (`?secret=<secre
 is required to access the served podcast feeds and episode files. This is useful for making RSS feeds accessible on the
 web, without making them fully public. Still, the confidentiality is provided as is, with no warranties 🙃
 
+### Docker
+
+You can run `pasjonsfrukt` using Docker, which is recommended for continuous harvesting and serving.
+
+#### Docker Compose
+
+1.  Copy `docker/docker-compose.template.yml` to `docker-compose.yml`.
+2.  Update the `volumes` section to point to your local `config.yaml`, `yield` directory, and `crontab` file.
+3.  Run the container:
+
+    ```sh
+    docker-compose up -d
+    ```
+
+#### Docker Run
+
+```sh
+docker run -d \
+  --name pasjonsfrukt \
+  -p 8000:8000 \
+  -v /path/to/yield:/app/yield \
+  -v /path/to/config.yaml:/app/config.yaml:ro \
+  -v /path/to/crontab:/etc/cron.d/pasjonsfrukt-crontab:ro \
+  ghcr.io/mathiazom/pasjonsfrukt:latest
+```
+
+#### Unraid / Permissions
+
+If you are running on Unraid or another system where file permissions are important, you can specify the user and group ID using environment variables. This ensures that files created by the container are owned by your user, preventing permission denied errors.
+
+-   `PUID`: User ID (e.g., 99 for 'nobody' on Unraid, or 1000 for standard user)
+-   `PGID`: Group ID (e.g., 100 for 'users' on Unraid, or 1000 for standard group)
+
+Example with Docker Compose:
+
+```yaml
+services:
+  pasjonsfrukt:
+    image: ghcr.io/mathiazom/pasjonsfrukt:latest
+    environment:
+      - PUID=99
+      - PGID=100
+    volumes:
+      - /mnt/user/appdata/pasjonsfrukt/yield:/app/yield
+      - /mnt/user/appdata/pasjonsfrukt/config.yaml:/app/config.yaml:ro
+      - /mnt/user/appdata/pasjonsfrukt/crontab:/etc/cron.d/pasjonsfrukt-crontab:ro
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+```
+
 ### Development
 
 #### Formatting

@@ -50,5 +50,7 @@ def config_from_stream(stream: TextIOWrapper) -> Optional[Config]:
         config.auth.access_token = os.environ.get("PODME_ACCESS_TOKEN")
     if os.environ.get("PODME_REFRESH_TOKEN"):
         config.auth.refresh_token = os.environ.get("PODME_REFRESH_TOKEN")
+    if os.environ.get("PODME_YIELD_DIR"):
+        config.yield_dir = os.environ.get("PODME_YIELD_DIR")
 
     return config

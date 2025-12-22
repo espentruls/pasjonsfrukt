@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Optional, Annotated
 import typer
 import uvicorn
@@ -14,13 +15,19 @@ from .main import get_podme_client, sync_slug_feed, harvest_podcast
 cli = AsyncTyper()
 
 
+def get_config_stream(config_stream: Optional[typer.FileText]):
+    if config_stream:
+        return config_stream
+    if os.path.exists("config.yaml"):
+        return open("config.yaml", "r", encoding="utf-8")
+    return None
+
+
 @cli.command()
 async def harvest(
     podcast_slugs: Annotated[
         Optional[list[str]],
-        typer.Argument(
-            metavar="[PODCAST_SLUG]...",
-        ),
+        typer.Argument(),
     ] = None,
     config_stream: Annotated[
         Optional[typer.FileText],
@@ -30,13 +37,13 @@ async def harvest(
             encoding="utf-8",
             help="Configurations file",
         ),
-    ] = "config.yaml",
+    ] = None,
 ):
     """
     Scrape podcast episodes
     """
-    config = config_from_stream(config_stream)
-    async with get_podme_client(config.auth.email, config.auth.password) as client:
+    config = config_from_stream(get_config_stream(config_stream))
+    async with get_podme_client(config.auth) as client:
         to_harvest = config.podcasts.keys() if podcast_slugs is None else podcast_slugs
         for s in to_harvest:
             await harvest_podcast(client, config, s)
@@ -46,9 +53,7 @@ async def harvest(
 async def sync_feeds(
     podcast_slugs: Annotated[
         Optional[list[str]],
-        typer.Argument(
-            metavar="[PODCAST_SLUG]...",
-        ),
+        typer.Argument(),
     ] = None,
     config_stream: Annotated[
         Optional[typer.FileText],
@@ -58,13 +63,13 @@ async def sync_feeds(
             encoding="utf-8",
             help="Configurations file",
         ),
-    ] = "config.yaml",
+    ] = None,
 ):
     """
     Update RSS podcast feeds to match scraped episodes
     """
-    config = config_from_stream(config_stream)
-    async with get_podme_client(config.auth.email, config.auth.password) as client:
+    config = config_from_stream(get_config_stream(config_stream))
+    async with get_podme_client(config.auth) as client:
         to_sync = config.podcasts.keys() if podcast_slugs is None else podcast_slugs
         for s in to_sync:
             await sync_slug_feed(client, config, s)
@@ -87,7 +92,7 @@ def serve_api(
             encoding="utf-8",
             help="Configurations file",
         ),
-    ] = "config.yaml",
+    ] = None,
 ):
     """
     Serve RSS podcast feeds
@@ -95,7 +100,7 @@ def serve_api(
     Wrapper around uvicorn, and supports passing additional options to the underlying uvicorn.run() command.
     """
     ctx.args.insert(0, f"{api.__name__}:api")
-    config = config_from_stream(config_stream)
+    config = config_from_stream(get_config_stream(config_stream))
     api_app.dependency_overrides[api_config] = lambda: config
     if config.secret is not None:
         logging.getLogger("uvicorn.access").addFilter(
@@ -114,12 +119,12 @@ def print_config(
             encoding="utf-8",
             help="Configurations file",
         ),
-    ] = "config.yaml",
+    ] = None,
 ):
     """
     Print parsed config
     """
-    pprint.pprint(config_from_stream(config_stream))
+    pprint.pprint(config_from_stream(get_config_stream(config_stream)))
 
 
 @cli.callback()

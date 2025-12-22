@@ -78,54 +78,38 @@ web, without making them fully public. Still, the confidentiality is provided as
 
 ### Docker
 
-You can run `pasjonsfrukt` using Docker, which is recommended for continuous harvesting and serving.
+You can run `pasjonsfrukt` using Docker, which is recommended for continuous harvesting and serving. The image is built automatically on GitHub.
 
-#### Docker Compose
+#### Environment Variables
 
-1.  Copy `docker/docker-compose.template.yml` to `docker-compose.yml`.
-2.  Update the `volumes` section to point to your local `config.yaml`, `yield` directory, and `crontab` file.
-3.  Run the container:
+-   `PUID`: User ID to run as (e.g., `99` for Unraid nobody).
+-   `PGID`: Group ID to run as (e.g., `100` for Unraid users).
+-   `ENABLE_SERVER`: Set to `true` to enable the built-in RSS feed server. Defaults to `false` (only downloads episodes).
+-   `PODME_EMAIL`: Override email from config.yaml.
+-   `PODME_PASSWORD`: Override password from config.yaml.
+-   `PODME_ACCESS_TOKEN`: Override access token (for bypassing login issues).
+-   `PODME_REFRESH_TOKEN`: Override refresh token.
 
-    ```sh
-    docker-compose up -d
-    ```
+#### Unraid / Docker Run
 
-#### Docker Run
+Run the container mapping your config and download directory.
 
 ```sh
 docker run -d \
   --name pasjonsfrukt \
-  -p 8000:8000 \
-  -v /path/to/yield:/app/yield \
-  -v /path/to/config.yaml:/app/config.yaml:ro \
-  -v /path/to/crontab:/etc/cron.d/pasjonsfrukt-crontab:ro \
+  -e PUID=99 \
+  -e PGID=100 \
+  -e ENABLE_SERVER=false \
+  -e PODME_EMAIL="your@email.com" \
+  -e PODME_PASSWORD="yourpassword" \
+  -v /mnt/user/appdata/pasjonsfrukt/yield:/app/yield \
+  -v /mnt/user/appdata/pasjonsfrukt/config.yaml:/app/config.yaml:ro \
+  -v /mnt/user/appdata/pasjonsfrukt/crontab:/etc/cron.d/pasjonsfrukt-crontab:ro \
   ghcr.io/mathiazom/pasjonsfrukt:latest
 ```
 
-#### Unraid / Permissions
-
-If you are running on Unraid or another system where file permissions are important, you can specify the user and group ID using environment variables. This ensures that files created by the container are owned by your user, preventing permission denied errors.
-
--   `PUID`: User ID (e.g., 99 for 'nobody' on Unraid, or 1000 for standard user)
--   `PGID`: Group ID (e.g., 100 for 'users' on Unraid, or 1000 for standard group)
-
-Example with Docker Compose:
-
-```yaml
-services:
-  pasjonsfrukt:
-    image: ghcr.io/mathiazom/pasjonsfrukt:latest
-    environment:
-      - PUID=99
-      - PGID=100
-    volumes:
-      - /mnt/user/appdata/pasjonsfrukt/yield:/app/yield
-      - /mnt/user/appdata/pasjonsfrukt/config.yaml:/app/config.yaml:ro
-      - /mnt/user/appdata/pasjonsfrukt/crontab:/etc/cron.d/pasjonsfrukt-crontab:ro
-    ports:
-      - "8000:8000"
-    restart: unless-stopped
-```
+**Note on Authentication:**
+If standard login fails (HTTP 400), you can manually extract your session tokens from the PodMe website (via browser Developer Tools > Application > Cookies/Storage) and provide them via `PODME_ACCESS_TOKEN` and `PODME_REFRESH_TOKEN` environment variables.
 
 ### Development
 

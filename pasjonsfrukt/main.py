@@ -1,6 +1,7 @@
 import contextlib
 import re
 from pathlib import Path
+from datetime import datetime, timedelta
 
 from podme_api import (
     PodMeDefaultAuthClient,
@@ -8,20 +9,41 @@ from podme_api import (
     PodMeClient,
     PodMeEpisode,
 )
+from podme_api.auth.models import SchibstedCredentials
 from podme_api.models import PodMeDownloadProgressTask
 from rfeed import Item, Guid, Enclosure, Feed, Image, iTunesItem, iTunes
 
-from .config import Config
+from .config import Config, Auth
 
 
 @contextlib.asynccontextmanager
-async def get_podme_client(email: str, password: str):
+async def get_podme_client(auth: Auth):
+    user_creds = None
+    if auth.email and auth.password:
+        user_creds = PodMeUserCredentials(email=auth.email, password=auth.password)
+
     client = PodMeClient(
         auth_client=PodMeDefaultAuthClient(
-            user_credentials=PodMeUserCredentials(email=email, password=password)
+            user_credentials=user_creds
         ),
         request_timeout=30,
     )
+
+    if auth.access_token:
+        # Manually set credentials from config
+        # We assume the token is valid for at least 1 hour if not specified
+        # If refresh_token is provided, the client will attempt to refresh when expired
+        creds = SchibstedCredentials(
+            access_token=auth.access_token,
+            refresh_token=auth.refresh_token or "",
+            id_token="dummy",
+            token_type="Bearer",
+            expires_in=3600,
+            user_id="dummy",
+            expiration_time=int((datetime.now() + timedelta(hours=1)).timestamp())
+        )
+        client.auth_client.set_credentials(creds)
+
     try:
         await client.__aenter__()
         yield client

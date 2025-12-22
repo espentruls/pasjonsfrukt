@@ -108,9 +108,9 @@ if [ "$ENABLE_SERVER" = "true" ]; then
     tail -f "$LOG_FILE" &
 
     if [ "$PUID" -ne 0 ]; then
-        exec gosu "$PUID":"$PGID" pasjonsfrukt serve $CONFIG_ARGS "$@"
+        exec gosu "$PUID":"$PGID" /usr/local/bin/pasjonsfrukt serve $CONFIG_ARGS "$@"
     else
-        exec pasjonsfrukt serve $CONFIG_ARGS "$@"
+        exec /usr/local/bin/pasjonsfrukt serve $CONFIG_ARGS "$@"
     fi
 else
     echo "Server disabled. Keeping container alive and logging..."

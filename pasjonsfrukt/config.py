@@ -40,10 +40,17 @@ class Config(YAMLWizard):
 
 
 def config_from_stream(stream: Optional[TextIOWrapper]) -> Config:
+    config = None
     if stream:
-        config = Config.from_yaml(stream)
-    else:
-        # Defaults if no file
+        try:
+            config = Config.from_yaml(stream)
+        except (TypeError, ValueError):
+            # TypeError occurs if file is empty (NoneType is not iterable)
+            # Proceed to use defaults/env vars
+            pass
+
+    if config is None:
+        # Defaults if no file or empty file
         config = Config(
             host="http://localhost",
             auth=Auth(),

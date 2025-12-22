@@ -110,3 +110,38 @@ docker run -d \
 
 **Note on Authentication:**
 If standard login fails (HTTP 400), you can manually extract your session tokens from the PodMe website (via browser Developer Tools > Application > Cookies/Storage) and provide them via `PODME_ACCESS_TOKEN` and `PODME_REFRESH_TOKEN` environment variables.
+
+### Development
+
+You can run `pasjonsfrukt` using Docker, which is recommended for continuous harvesting and serving. The image is built automatically on GitHub.
+
+#### Environment Variables
+
+-   `PUID`: User ID to run as (e.g., `99` for Unraid nobody).
+-   `PGID`: Group ID to run as (e.g., `100` for Unraid users).
+-   `ENABLE_SERVER`: Set to `true` to enable the built-in RSS feed server. Defaults to `false` (only downloads episodes).
+-   `PODME_EMAIL`: Override email from config.yaml.
+-   `PODME_PASSWORD`: Override password from config.yaml.
+-   `PODME_ACCESS_TOKEN`: Override access token (for bypassing login issues).
+-   `PODME_REFRESH_TOKEN`: Override refresh token.
+
+#### Unraid / Docker Run
+
+Run the container mapping your config and download directory.
+
+```sh
+docker run -d \
+  --name pasjonsfrukt \
+  -e PUID=99 \
+  -e PGID=100 \
+  -e ENABLE_SERVER=false \
+  -e PODME_EMAIL="your@email.com" \
+  -e PODME_PASSWORD="yourpassword" \
+  -v /mnt/user/appdata/pasjonsfrukt/yield:/app/yield \
+  -v /mnt/user/appdata/pasjonsfrukt/config.yaml:/app/config.yaml:ro \
+  -v /mnt/user/appdata/pasjonsfrukt/crontab:/etc/cron.d/pasjonsfrukt-crontab:ro \
+  ghcr.io/espentruls/pasjonsfrukt:latest
+```
+
+**Note on Authentication:**
+If standard login fails (HTTP 400), you can manually extract your session tokens from the PodMe website (via browser Developer Tools > Application > Cookies/Storage) and provide them via `PODME_ACCESS_TOKEN` and `PODME_REFRESH_TOKEN` environment variables.

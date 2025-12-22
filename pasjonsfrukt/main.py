@@ -1,7 +1,7 @@
 import contextlib
 import re
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from podme_api import (
     PodMeDefaultAuthClient,
@@ -22,11 +22,14 @@ async def get_podme_client(auth: Auth):
     if auth.email and auth.password:
         user_creds = PodMeUserCredentials(email=auth.email, password=auth.password)
 
+    # Disable credentials storage if using env vars to avoid overwriting manually set credentials
+    # or to prevent saving/loading invalid credentials from disk.
     client = PodMeClient(
         auth_client=PodMeDefaultAuthClient(
             user_credentials=user_creds
         ),
         request_timeout=30,
+        disable_credentials_storage=True,
     )
 
     if auth.access_token:
@@ -39,8 +42,8 @@ async def get_podme_client(auth: Auth):
             id_token="dummy",
             token_type="Bearer",
             expires_in=3600,
-            user_id="dummy",
-            expiration_time=int((datetime.now() + timedelta(hours=1)).timestamp())
+            scope="openid offline_access",
+            expiration_time=datetime.now(tz=timezone.utc) + timedelta(hours=1)
         )
         client.auth_client.set_credentials(creds)
 

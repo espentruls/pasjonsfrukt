@@ -26,6 +26,9 @@ COPY pasjonsfrukt pasjonsfrukt
 RUN /root/.local/bin/poetry install --only main
 
 COPY docker/entrypoint.sh .
+COPY docker/crontab.default .
 RUN chmod +x ./entrypoint.sh
+RUN mkdir /config
+
 ENTRYPOINT ["./entrypoint.sh"]
 CMD ["--host", "0.0.0.0", "--port", "8000"]

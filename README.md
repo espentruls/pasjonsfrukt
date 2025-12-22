@@ -92,7 +92,7 @@ You can run `pasjonsfrukt` using Docker, which is recommended for continuous har
 
 #### Unraid / Docker Run
 
-Run the container mapping your config and download directory.
+Run the container mapping your config and download directory. Using a `/config` volume allows you to store `config.yaml` and access logs easily.
 
 ```sh
 docker run -d \
@@ -103,10 +103,14 @@ docker run -d \
   -e PODME_EMAIL="your@email.com" \
   -e PODME_PASSWORD="yourpassword" \
   -v /mnt/user/appdata/pasjonsfrukt/yield:/app/yield \
-  -v /mnt/user/appdata/pasjonsfrukt/config.yaml:/app/config.yaml:ro \
-  -v /mnt/user/appdata/pasjonsfrukt/crontab:/etc/cron.d/pasjonsfrukt-crontab:ro \
+  -v /mnt/user/appdata/pasjonsfrukt:/config \
   ghcr.io/espentruls/pasjonsfrukt:latest
 ```
+
+**Configuration:**
+-   Place your `config.yaml` in `/mnt/user/appdata/pasjonsfrukt/`.
+-   Logs will be available at `/mnt/user/appdata/pasjonsfrukt/pasjonsfrukt.log`.
+-   By default, it runs harvest every hour. If you want a custom schedule, place a file named `pasjonsfrukt-crontab` in `/mnt/user/appdata/pasjonsfrukt/` (mapped to `/etc/cron.d/pasjonsfrukt-crontab`).
 
 **Note on Authentication:**
 If standard login fails (HTTP 400), you can manually extract your session tokens from the PodMe website (via browser Developer Tools > Application > Cookies/Storage) and provide them via `PODME_ACCESS_TOKEN` and `PODME_REFRESH_TOKEN` environment variables.

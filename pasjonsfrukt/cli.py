@@ -10,7 +10,8 @@ from .api import api as api_app, api_config
 from .async_cli import AsyncTyper
 from .config import config_from_stream
 from .logging_utils import LogRedactSecretFilter
-from .main import get_podme_client, sync_slug_feed, harvest_podcast
+from .harvester import sync_slug_feed, harvest_podcast
+from .services.podme import get_podme_client
 
 cli = AsyncTyper()
 

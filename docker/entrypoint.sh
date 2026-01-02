@@ -56,21 +56,22 @@ CRON_FILE="/etc/cron.d/pasjonsfrukt-crontab"
 if [ -f "$CRON_FILE" ]; then
     echo "Using provided crontab at $CRON_FILE"
 else
-    echo "Using default crontab"
-    CRON_FILE="/app/crontab.default"
-fi
+    echo "Generating default crontab..."
+    CRON_FILE="/app/crontab.generated"
 
-# Update default crontab with correct config args if needed
-if [ "$CRON_FILE" = "/app/crontab.default" ]; then
-    # We replace the command in the default crontab
-    # Default is: ... pasjonsfrukt harvest --config-file /config/config.yaml ...
-    # We need to replace it with actual args or remove it if empty.
-
-    if [ -z "$CONFIG_ARGS" ]; then
-        sed -i "s| --config-file /config/config.yaml||g" "$CRON_FILE"
-    else
-        sed -i "s| --config-file /config/config.yaml| $CONFIG_ARGS|g" "$CRON_FILE"
+    # Generate crontab content dynamically
+    echo "# Default crontab for pasjonsfrukt" > "$CRON_FILE"
+    echo "# Run harvest every hour" >> "$CRON_FILE"
+    # Construct the command
+    CMD="cd /app && /usr/local/bin/pasjonsfrukt harvest"
+    if [ -n "$CONFIG_ARGS" ]; then
+        CMD="$CMD $CONFIG_ARGS"
     fi
+    CMD="$CMD >> /config/pasjonsfrukt.log 2>&1"
+
+    echo "0 * * * * $CMD" >> "$CRON_FILE"
+    echo "# Empty line to please the cron gods" >> "$CRON_FILE"
+    echo "" >> "$CRON_FILE"
 fi
 
 echo "Installing crontab from $CRON_FILE..."
@@ -91,7 +92,7 @@ cron
 
 # Log tailing
 LOG_FILE="/var/log/pasjonsfrukt.log"
-# If we are using /config/pasjonsfrukt.log (from default crontab), we should tail that too?
+# If we are using /config/pasjonsfrukt.log (from generated crontab), we should tail that too?
 if [ -f "/config/pasjonsfrukt.log" ]; then
     LOG_FILE="/config/pasjonsfrukt.log"
 fi
